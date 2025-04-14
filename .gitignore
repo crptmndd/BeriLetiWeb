@@ -1,0 +1,3 @@
+/venv
+/flask_sessions
+/web/database/database.db
