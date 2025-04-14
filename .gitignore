@@ -1,3 +1,4 @@
-/venv
+.venv
+.idea
 /flask_sessions
 /web/database/database.db
