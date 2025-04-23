@@ -3,5 +3,6 @@
 .env
 __pycache__/
 *.рус
+.vscode
 /sessions
 /app/database/database.db

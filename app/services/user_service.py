@@ -3,6 +3,7 @@ from sqlalchemy.future import select
 from passlib.context import CryptContext
 from app.models import User
 from app.schemas import UserCreate, UserUpdate
+from uuid import UUID 
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -16,7 +17,18 @@ class UserService:
         """Получить пользователя по номеру телефона."""
         
         result = await self.db.execute(select(User).filter(User.phone_number == phone_number))
-        return result.scalar_one_or_none
+        return result.scalar_one_or_none()
+    
+    async def get_user_by_id(self, user_id: UUID):
+        """Получить пользователя по ID."""
+        result = await self.db.execute(select(User).filter(User.id == user_id))
+        return result.scalar_one_or_none()
+    
+    async def login_user(self, phone_number: str, password: str):
+        user = await self.get_user_by_phone(phone_number)
+        if user and pwd_context.verify(password, user.password_hash):
+            return user
+        return None
     
     async def create_user(self, user_data: UserCreate):
         """Создать нового пользователя."""
