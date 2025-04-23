@@ -1,17 +1,37 @@
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, FloatField, TextAreaField, FileField
-from wtforms.validators import DataRequired, Email, Length, Optional, EqualTo
+from starlette_wtf import StarletteForm
+from wtforms import TextAreaField, PasswordField, StringField
+from wtforms.validators import DataRequired, Length, Email, EqualTo
+from wtforms.widgets import PasswordInput
 
 
-
-class RegistrationForm(FlaskForm):
+class RegistrationForm(StarletteForm):
     phone_number = StringField("Phone Number", validators=[DataRequired(), Length(min=11, max=11)])
-    email = StringField("Email", validators=[DataRequired(), Email()])
-    name = StringField("Name", validators=[DataRequired(), Length(min=2, max=20)])
+    full_name = StringField("Full Name", validators=[DataRequired(), Length(min=1, max=40)])
+    birth_date = StringField("Birth Date", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
-    confirm_password = PasswordField("Confirm Password", validators=[DataRequired(), EqualTo('password', message="Passwords must match.")])
+    confirm_password = PasswordField("Confirm Password", validators=[DataRequired()])
 
 
-class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
-    password = PasswordField('Password', validators=[DataRequired()])
+class LoginForm(StarletteForm):
+    phone_number = StringField("Phone Number", validators=[DataRequired(), Length(min=11, max=11)])
+    password = PasswordField("Password", validators=[DataRequired()])
+
+
+class RequestPhoneCodeForm(StarletteForm):
+    pass
+
+
+class TripForm(StarletteForm):
+    pass
+
+
+class ChangeUserInfoForm(StarletteForm):
+    pass
+
+
+class ResetPasswordRequestForm(StarletteForm):
+    pass
+
+
+class ResetPasswordForm(StarletteForm):
+    pass

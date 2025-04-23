@@ -1,5 +1,6 @@
-.venv
+/venv
 .idea
 .env
-/flask_sessions
+__pycache__/
+/sessions
 /web/database/database.db
