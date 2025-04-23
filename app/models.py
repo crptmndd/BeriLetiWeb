@@ -1,8 +1,8 @@
 from typing import List, Optional
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, date
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -16,11 +16,13 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(String, unique=True, index=True)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     full_name: Mapped[str] = mapped_column(String)
-    birth_date: Mapped[datetime] = mapped_column(DateTime)
+    birth_date: Mapped[date] = mapped_column(Date) 
     password_hash: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     
-    user: Mapped["Trip"] = relationship(back_populates="user")
+    # A user has multiple trips
+    trips: Mapped[List["Trip"]] = relationship(back_populates="user")
+    # A user has multiple orders
     orders: Mapped[List["Order"]] = relationship(back_populates="user")
     
     
@@ -38,8 +40,10 @@ class Trip(Base):
     comment: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     
+    # A trip belongs to one user
     user: Mapped["User"] = relationship(back_populates="trips")
-    orders: Mapped["Order"] = relationship(back_populates="trips")
+    # A trip has multiple orders
+    orders: Mapped[List["Order"]] = relationship(back_populates="trip")
         
 
 class Order(Base):
@@ -53,5 +57,7 @@ class Order(Base):
     description: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     
+    # An order belongs to one user
     user: Mapped["User"] = relationship(back_populates="orders")
+    # An order belongs to one trip
     trip: Mapped["Trip"] = relationship(back_populates="orders")

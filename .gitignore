@@ -4,4 +4,4 @@
 __pycache__/
 *.рус
 /sessions
-/web/database/database.db
+/app/database/database.db
