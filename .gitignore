@@ -4,5 +4,6 @@
 __pycache__/
 *.рус
 .vscode
+alembic.ini
 /sessions
 /app/database/database.db
