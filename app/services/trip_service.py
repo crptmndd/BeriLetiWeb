@@ -19,8 +19,9 @@ class TripService:
         result = await self.db.execute(select(Trip))
         return result.scalars().all()
     
-    async def create_trip(self, trip_data: TripCreate):
+    async def create_trip(self, trip_data: TripCreate, user_id: UUID):
         new_trip = Trip(
+            user_id=user_id,
             from_location=trip_data.from_location,
             to_location=trip_data.to_location,
             departure_date=trip_data.departure_date,
