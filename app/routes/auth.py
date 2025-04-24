@@ -13,11 +13,10 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
-async def get_current_user(request: Request):
+async def get_current_user(request: Request, db: AsyncSession):
     user_id = request.session.get("user_id")
     print(f"Session user_id: {user_id}")
     if user_id:
-        db = await get_db()
         service = UserService(db)
         user = await service.get_user_by_id(user_id)
         return user

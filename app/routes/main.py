@@ -13,20 +13,22 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    current_user = await get_current_user(request)
+async def home(request: Request, db: AsyncSession = Depends(get_db)):
+    current_user = await get_current_user(request, db)
     return templates.TemplateResponse("main.html", {"request": request, "current_user": current_user})
     
 
 @router.get("/add_trip", response_class=HTMLResponse)
-async def add_trip(request: Request):
+async def add_trip(request: Request, db: AsyncSession = Depends(get_db)):
     form_data = request.form()
+    current_user = await get_current_user(request, db)
     print(form_data)
-    return templates.TemplateResponse("main.html", {"request": request})
+    return templates.TemplateResponse("add_trip.html", {"request": request, "current_user": current_user})
 
 
 @router.get("/search_trip", response_class=HTMLResponse)
-async def seatch_trip(request: Request):
+async def seatch_trip(request: Request, db: AsyncSession = Depends(get_db)):
     query_params = request.query_params
+    current_user = await get_current_user(request, db)
     print(query_params)
-    return templates.TemplateResponse("main.html", {"request": request})
+    return templates.TemplateResponse("search_trip.html", {"request": request, "current_user": current_user})

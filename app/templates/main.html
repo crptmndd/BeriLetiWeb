@@ -6,33 +6,9 @@
     <h1>Добро пожаловать в сервис отправки посылок!</h1>
     <p>Здесь вы можете добавить свою поездку или найти попутчика для отправки посылки.</p>
 
-    <!-- Форма для добавления поездки -->
-    <h2>Добавить поездку</h2>
-    <form action="/add_trip" method="post">
-        <label for="from_location">Откуда:</label>
-        <input type="text" id="from_location" name="from_location" required>
-        <label for="to_location">Куда:</label>
-        <input type="text" id="to_location" name="to_location" required>
-        <label for="departure_date">Дата поездки:</label>
-        <input type="date" id="departure_date" name="departure_date" required>
-        <label for="max_weight">Максимальный вес груза (кг):</label>
-        <input type="number" id="max_weight" name="max_weight" step="0.1" required>
-        <label for="price">Цена поездки (руб.):</label>
-        <input type="number" id="price" name="price" step="0.01" required>
-        <label for="comment">Комментарий (опционально):</label>
-        <textarea id="comment" name="comment"></textarea>
-        <button type="submit">Добавить поездку</button>
-    </form>
-
-    <!-- Форма для поиска поездки -->
-    <h2>Найти поездку</h2>
-    <form action="/search_trip" method="get">
-        <label for="search_from">Откуда:</label>
-        <input type="text" id="search_from" name="search_from">
-        <label for="search_to">Куда:</label>
-        <input type="text" id="search_to" name="search_to">
-        <label for="search_date">Дата:</label>
-        <input type="date" id="search_date" name="search_date">
-        <button type="submit">Найти</button>
-    </form>
+    <!-- Кнопки для навигации -->
+    <div style="text-align: center; margin: 20px;">
+        <a href="/add_trip" class="button">Создать поездку</a>
+        <a href="/search_trip" class="button">Найти поездку</a>
+    </div>
 {% endblock %}

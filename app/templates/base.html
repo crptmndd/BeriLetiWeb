@@ -13,8 +13,11 @@
             <ul>
                 <li><a href="/">Главная</a></li>
                 <li><a href="/add_trip">Добавить поездку</a></li>
-                <li><a href="/login">Вход</a></li>
-                <li><a href="/register">Регистрация</a></li>
+                <li><a href="/search_trip">Найти поездку</a></li>
+                {% if not current_user %}
+                    <li><a href="/login">Вход</a></li>
+                    <li><a href="/register">Регистрация</a></li>
+                {% endif %}
                 {% if current_user %}
                     <li style="float: right;"><a href="/logout">Выйти</a></li>
                     <li style="float: right;">Привет, {{ current_user.full_name }}!</li>
