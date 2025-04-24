@@ -1,0 +1,21 @@
+<!-- templates/search_trip.html -->
+{% extends "base.html" %}
+
+{% block title %}Найти поездку{% endblock %}
+
+{% block content %}
+    <h1>Найти поездку</h1>
+    <p>Введите данные, чтобы найти подходящую поездку.</p>
+    <form action="/search_trip" method="get">
+        <label for="search_from">Откуда:</label>
+        <input type="text" id="search_from" name="search_from">
+        <label for="search_to">Куда:</label>
+        <input type="text" id="search_to" name="search_to">
+        <label for="search_date">Дата:</label>
+        <input type="date" id="search_date" name="search_date">
+        <button type="submit">Найти</button>
+    </form>
+
+    <h2>Результаты поиска</h2>
+    <p>Здесь будут отображаться найденные поездки (пока это заглушка).</p>
+{% endblock %}
