@@ -7,6 +7,7 @@
     <p>Заполните форму, чтобы добавить новую поездку.</p>
 
     <form action="/add_trip" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label for="from_location">Откуда:</label>
         <input type="text" id="from_location" name="from_location" required>
         <label for="to_location">Куда:</label>

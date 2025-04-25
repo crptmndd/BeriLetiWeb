@@ -36,6 +36,9 @@ class TripService:
         return new_trip
     
     async def search_trips(self, from_location: Optional[str] = None, to_location: Optional[str] = None, departure_date: Optional[date] = None):
+        if not any([from_location, to_location, departure_date]):
+            return []
+    
         query = select(Trip)
         if from_location:
             query = query.filter(Trip.from_location.ilike(f"%{from_location}%"))

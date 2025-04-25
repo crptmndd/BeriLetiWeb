@@ -6,6 +6,7 @@
 {% block content %}
     <h1>Вход</h1>
     <form action="/login" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label for="phone_number">Номер телефона:</label>
         <input type="text" id="phone_number" name="phone_number" required>
         <label for="password">Пароль:</label>

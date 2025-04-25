@@ -6,16 +6,67 @@
 {% block content %}
     <h1>Найти поездку</h1>
     <p>Введите данные, чтобы найти подходящую поездку.</p>
-    <form action="/search_trip" method="get">
-        <label for="search_from">Откуда:</label>
-        <input type="text" id="search_from" name="search_from">
-        <label for="search_to">Куда:</label>
-        <input type="text" id="search_to" name="search_to">
-        <label for="search_date">Дата:</label>
-        <input type="date" id="search_date" name="search_date">
+    
+    <form action="/search_trip" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div>
+            <label for="from_location">Откуда:</label>
+            {{ form.from_location(id="from_location") }}
+            {% if form.from_location.errors %}
+                <ul style="color: red;">
+                    {% for error in form.from_location.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div>
+            <label for="to_location">Куда:</label>
+            {{ form.to_location(id="to_location") }}
+            {% if form.to_location.errors %}
+                <ul style="color: red;">
+                    {% for error in form.to_location.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div>
+            <label for="departure_date">Дата:</label>
+            {{ form.departure_date(id="departure_date") }}
+            {% if form.departure_date.errors %}
+                <ul style="color: red;">
+                    {% for error in form.departure_date.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
         <button type="submit">Найти</button>
     </form>
 
-    <h2>Результаты поиска</h2>
-    <p>Здесь будут отображаться найденные поездки (пока это заглушка).</p>
+    <!-- Отображение результатов поиска -->
+    {% if trips is defined %}
+        <h2>Результаты поиска</h2>
+        {% if trips %}
+            <ul>
+                {% for trip in trips %}
+                    <li>
+                        Поездка от {{ trip.from_location }} до {{ trip.to_location }} 
+                        на {{ trip.departure_date.strftime('%d.%m.%Y') }}. 
+                        Максимальный вес: {{ trip.max_weight }} кг, 
+                        Цена: {{ trip.price }} руб.
+                        {% if trip.comment %}
+                            <br>Комментарий: {{ trip.comment }}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>По вашему запросу поездок не найдено.</p>
+        {% endif %}
+    {% endif %}
 {% endblock %}

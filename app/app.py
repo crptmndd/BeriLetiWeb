@@ -4,13 +4,15 @@ from app.routes.auth import router as auth_router
 from app.routes.main import router as main_router
 from app.api.v1.user import router as user_api_router
 from starlette.middleware.sessions import SessionMiddleware
-from app.config import SECRET_KEY
+from starlette_csrf import CSRFMiddleware
+from app.config import templates, SECRET_KEY
 
 app = FastAPI()
 
 # Подключение статических файлов
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+# app.add_middleware(CSRFMiddleware, secret=CSRF_KEY)
 
 # Подключение маршрутов
 app.include_router(auth_router)

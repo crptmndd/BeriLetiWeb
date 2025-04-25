@@ -3,14 +3,16 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.db import get_db
-from app.forms import CreateTripForm
+from app.forms import CreateTripForm, TripQueryForm
 from app.schemas import TripCreate
 from app.services.trip_service import TripService
 from app.routes.auth import get_current_user
+from datetime import date
+from app.config import templates
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates")
+
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -63,8 +65,37 @@ async def add_trip_post(request: Request, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/search_trip", response_class=HTMLResponse)
-async def seatch_trip(request: Request, db: AsyncSession = Depends(get_db)):
-    query_params = request.query_params
+async def search_trip_get(request: Request, db: AsyncSession = Depends(get_db)):
+    form = TripQueryForm(request=request)  # Создаём пустую форму для отображения
     current_user = await get_current_user(request, db)
-    print(query_params)
-    return templates.TemplateResponse("search_trip.html", {"request": request, "current_user": current_user})
+    return templates.TemplateResponse(
+        "search_trip.html",
+        {"request": request, "current_user": current_user, "form": form}
+    )
+
+@router.post("/search_trip", response_class=HTMLResponse)
+async def search_trip_post(request: Request, db: AsyncSession = Depends(get_db)):
+    form = await TripQueryForm.from_formdata(request)  # Извлекаем данные из POST-запроса
+    current_user = await get_current_user(request, db)
+
+    if form.validate():  # Проверяем валидность данных
+        from_location = form.from_location.data
+        to_location = form.to_location.data
+        departure_date = form.departure_date.data
+
+        trip_service = TripService(db)
+        trips = await trip_service.search_trips(
+            from_location=from_location,
+            to_location=to_location,
+            departure_date=departure_date
+        )
+        return templates.TemplateResponse(
+            "search_trip.html",
+            {"request": request, "current_user": current_user, "trips": trips, "form": form}
+        )
+    else:
+        # Если данные некорректны, возвращаем форму с ошибками
+        return templates.TemplateResponse(
+            "search_trip.html",
+            {"request": request, "current_user": current_user, "form": form}
+        )

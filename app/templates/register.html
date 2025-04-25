@@ -5,6 +5,7 @@
 {% block content %}
     <h1>Регистрация</h1>
     <form action="/register" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label for="phone_number">Номер телефона:</label>
         <input type="text" id="phone_number" name="phone_number" required>
         <label for="full_name">ФИО:</label>
