@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Подтверждение номера{% endblock %}
+
+{% block content %}
+<style>
+    .verification-container {
+        text-align: center;
+        margin: 50px auto;
+        max-width: 400px;
+        font-family: Arial, sans-serif;
+    }
+    .verification-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #000;
+        margin-bottom: 10px;
+    }
+    .verification-text {
+        font-size: 16px;
+        color: #000;
+        margin-bottom: 20px;
+    }
+    .code-inputs {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .code-input {
+        width: 40px;
+        height: 40px;
+        text-align: center;
+        font-size: 18px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        outline: none;
+    }
+    .verify-button {
+        background-color: #007BFF;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    .verify-button:hover {
+        background-color: #0056b3;
+    }
+    .footer-links {
+        margin-top: 30px;
+        font-size: 14px;
+        color: #000;
+    }
+    .footer-links a {
+        color: #000;
+        text-decoration: none;
+        margin: 0 5px;
+    }
+    .social-icons {
+        margin-top: 10px;
+    }
+    .social-icon {
+        margin: 0 5px;
+        color: #007BFF;
+        text-decoration: none;
+        font-size: 16px;
+    }
+</style>
+
+<div class="verification-container">
+    <div class="verification-title">Подтвердите номер</div>
+    <div class="verification-text">Отправил код в СМС на номер {{ phone_number }}</div>
+    <form action="/verify_phone" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="code-inputs">
+            <input type="text" class="code-input" name="code1" maxlength="1" required>
+            <input type="text" class="code-input" name="code2" maxlength="1" required>
+            <input type="text" class="code-input" name="code3" maxlength="1" required>
+            <input type="text" class="code-input" name="code4" maxlength="1" required>
+        </div>
+        <button type="submit" class="verify-button">Подтвердить</button>
+    </form>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <div class="footer-links">
+        <a href="#">Как работает БериЛети?</a> |
+        <a href="#">О нас</a> |
+        <a href="#">Поддержка</a>
+    </div>
+    <div class="social-icons">
+        <a href="#" class="social-icon">f</a>
+        <a href="#" class="social-icon">VK</a>
+        <a href="#" class="social-icon">X</a>
+        <a href="#" class="social-icon">📷</a>
+    </div>
+    
+</div>
+<script>
+    const inputs = document.querySelectorAll('.code-input');
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+            if (input.value.length === 1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -11,7 +11,12 @@ app = FastAPI()
 
 # Подключение статических файлов
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=SECRET_KEY,
+    https_only=True,
+    same_site="strict"
+    )
 # app.add_middleware(CSRFMiddleware, secret=CSRF_KEY)
 
 # Подключение маршрутов

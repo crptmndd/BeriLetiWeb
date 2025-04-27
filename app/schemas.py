@@ -12,6 +12,11 @@ class UserCreate(BaseModel):
     password: str
     
 
+class UserLogin(BaseModel):
+    phone_number: str
+    password: str
+    
+
 class UserUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
