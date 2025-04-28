@@ -4,12 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.db import get_db
 from app.forms import RegistrationForm, LoginForm
 from app.services.user_service import UserService
-from app.services.verification_service import VerificationService
+from app.services.phone_verification_service import PhoneVerificationService
 from app.schemas import UserCreate, UserLogin
 from app.config import templates
-from app.services.auth_service import AuthService
+from app.services.csrf_service import CSRFService
+from app.services.redis_service import RedisService
 
 router = APIRouter()
+
+# TODO: Add profile page, and then start chat + Redis
 
 
 async def get_current_user(request: Request, db: AsyncSession):
@@ -23,17 +26,18 @@ async def get_current_user(request: Request, db: AsyncSession):
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_get(request: Request):
-    csrf_token = AuthService.generate_csrf_token()
+    csrf_token = CSRFService.generate_csrf_token()
     request.session["csrf_token"] = csrf_token
     form = RegistrationForm(request=request)
     return templates.TemplateResponse("register.html", {"request": request, "form": form, "csrf_token": csrf_token})
+
 
 @router.post("/register", response_class=HTMLResponse)
 async def register_post(request: Request, db: AsyncSession = Depends(get_db)):
     form_data = await request.form()
     session_token = request.session.get("csrf_token")
     form_token = form_data.get("csrf_token")
-    AuthService.validate_csrf_token(session_token, form_token)  # Проверка CSRF-токен
+    CSRFService.validate_csrf_token(session_token, form_token)  # Проверка CSRF-токен
     form = await RegistrationForm.from_formdata(request)
     if await form.validate_on_submit():
         user_data = UserCreate(
@@ -58,7 +62,9 @@ async def register_post(request: Request, db: AsyncSession = Depends(get_db)):
             "password": form.password.data
         }
         
-        verification_service = VerificationService()
+        redis_service = RedisService()
+        
+        verification_service = PhoneVerificationService()
 
         ver_code = verification_service.generate_verification_code()
         request.session["verification_code"] = str(ver_code)
@@ -69,46 +75,11 @@ async def register_post(request: Request, db: AsyncSession = Depends(get_db)):
 
     return templates.TemplateResponse("register.html", {"request": request, "form": form, "csrf_token": request.session.get("csrf_token")})
 
-@router.get("/login", response_class=HTMLResponse)
-async def login_get(request: Request):
-    csrf_token = AuthService.generate_csrf_token()
-    request.session["csrf_token"] = csrf_token
-    form = LoginForm(request=request)
-    return templates.TemplateResponse("login.html", {"request": request, "form": form, "csrf_token": csrf_token})
-
-@router.post("/login", response_class=HTMLResponse)
-async def login_post(request: Request, db: AsyncSession = Depends(get_db)):
-    form_data = await request.form()
-    session_token = request.session.get("csrf_token")
-    form_token = form_data.get("csrf_token")
-    AuthService.validate_csrf_token(session_token, form_token)
-    form = await LoginForm.from_formdata(request)
-    if await form.validate_on_submit():
-        service = UserService(db)
-        user = await service.login_user(form.phone_number.data, form.password.data)
-        if user:
-            request.session["user_id"] = str(user.id)
-            return templates.TemplateResponse(
-                "main.html",
-                {"request": request, "current_user": user, "success": "Вход выполнен успешно"}
-            )
-        return templates.TemplateResponse(
-            "login.html",
-            {"request": request, "form": form, "csrf_token": request.session.get("csrf_token"), "error": "Неверные данные"}
-        )
-    return templates.TemplateResponse("login.html", {"request": request, "form": form, "csrf_token": request.session.get("csrf_token")})
-
-
-@router.get("/logout")
-async def logout(request: Request):
-    if "user_id" in request.session:
-        del request.session["user_id"]
-    return RedirectResponse(url="/", status_code=302)
-
 
 @router.get("/verify_phone", response_class=HTMLResponse)
 async def verify_phone_get(request: Request):
     return templates.TemplateResponse("verify_phone.html", {"request": request})
+
 
 @router.post("/verify_phone", response_class=HTMLResponse)
 async def verify_phone_post(request: Request, db: AsyncSession = Depends(get_db)):
@@ -132,3 +103,41 @@ async def verify_phone_post(request: Request, db: AsyncSession = Depends(get_db)
         "verify_phone.html",
         {"request": request, "error": "Неверный код"}
     )
+    
+    
+@router.get("/login", response_class=HTMLResponse)
+async def login_get(request: Request):
+    csrf_token = CSRFService.generate_csrf_token()
+    request.session["csrf_token"] = csrf_token
+    form = LoginForm(request=request)
+    return templates.TemplateResponse("login.html", {"request": request, "form": form, "csrf_token": csrf_token})
+
+
+@router.post("/login", response_class=HTMLResponse)
+async def login_post(request: Request, db: AsyncSession = Depends(get_db)):
+    form_data = await request.form()
+    session_token = request.session.get("csrf_token")
+    form_token = form_data.get("csrf_token")
+    CSRFService.validate_csrf_token(session_token, form_token)
+    form = await LoginForm.from_formdata(request)
+    if await form.validate_on_submit():
+        service = UserService(db)
+        user = await service.login_user(form.phone_number.data, form.password.data)
+        if user:
+            request.session["user_id"] = str(user.id)
+            return templates.TemplateResponse(
+                "main.html",
+                {"request": request, "current_user": user, "success": "Вход выполнен успешно"}
+            )
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "form": form, "csrf_token": request.session.get("csrf_token"), "error": "Неверные данные"}
+        )
+    return templates.TemplateResponse("login.html", {"request": request, "form": form, "csrf_token": request.session.get("csrf_token")})
+
+
+@router.get("/logout")
+async def logout(request: Request):
+    if "user_id" in request.session:
+        del request.session["user_id"]
+    return RedirectResponse(url="/", status_code=302)

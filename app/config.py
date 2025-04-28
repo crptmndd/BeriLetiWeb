@@ -6,9 +6,13 @@ from fastapi.templating import Jinja2Templates
 load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+
 DATABASE_URL = os.getenv("DATABASE_URL")
+
 TWILIO_ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
 TWILIO_AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+
+REDIS_URL = os.environ["REDIS_URL"]
 # CSRF_KEY = os.getenv("CSRF_KEY")
 
 # Инициализация templates

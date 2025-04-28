@@ -1,27 +1,34 @@
-# import secrets
-# secret_key = secrets.token_hex(32)
-# print(secret_key)
+import redis
+import bcrypt
 
+try:
+    # Подключение к Redis
+    r = redis.Redis(
+        host='127.0.0.1',
+        port=6379,
+        decode_responses=True
+    )
 
-import os
-from twilio.rest import Client
-from dotenv import load_dotenv
+    # Проверка подключения
+    print("Проверка подключения:", r.ping())  # Должно вывести True
 
-load_dotenv()
+    # Хеширование и сохранение пароля
+    password = "user_password"
+    hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    # Преобразуем хеш в строку перед сохранением в Redis
+    r.set('user:password', hashed.decode('utf-8'))
 
-account_sid = os.environ["TWILIO_ACCOUNT_SID"]
-auth_token = os.environ["TWILIO_AUTH_TOKEN"]
-client = Client(account_sid, auth_token)
+    # Проверка пароля
+    stored_hash = r.get('user:password')
+    # Преобразуем строку обратно в байты перед проверкой
+    if bcrypt.checkpw(password.encode('utf-8'), stored_hash.encode('utf-8')):
+        print("Пароль верный")
+    else:
+        print("Пароль неверный")
 
-service = client.verify.v2.services.create(
-    friendly_name="BeriLeti", custom_code_enabled=True
-)
-
-print(service.sid)
-
-
-verification = client.verify.v2.services(
-    service.sid
-).verifications.create(to="+79934205484", channel="sms", custom_code=1010)
-
-print(verification.status)
+except redis.ConnectionError as e:
+    print(f"Ошибка подключения к Redis: {e}")
+except redis.AuthenticationError as e:
+    print(f"Ошибка аутентификации: {e}")
+except Exception as e:
+    print(f"Неизвестная ошибка: {e}")

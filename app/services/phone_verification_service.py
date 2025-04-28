@@ -3,7 +3,7 @@ from twilio.rest import Client
 import random
 
 
-class VerificationService: 
+class PhoneVerificationService: 
     
     def __init__(self):
         self.client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)

@@ -1,7 +1,7 @@
 from secrets import token_hex
 from fastapi import HTTPException
 
-class AuthService:
+class CSRFService:
     @staticmethod
     def generate_csrf_token() -> str:
         """Генерирует CSRF-токен."""
