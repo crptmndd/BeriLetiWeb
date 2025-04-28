@@ -2,7 +2,7 @@ from typing import List, Optional
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, relationship, Mapped, mapped_column
-from datetime import datetime, date
+from datetime import datetime
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
@@ -18,7 +18,6 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(String, unique=True, index=True)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     full_name: Mapped[str] = mapped_column(String)
-    birth_date: Mapped[date] = mapped_column(Date)
     rating: Mapped[float] = mapped_column(Float, default=0.0)
     password_hash: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)

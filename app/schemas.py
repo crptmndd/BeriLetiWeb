@@ -8,7 +8,6 @@ from uuid import UUID
 class UserCreate(BaseModel):
     phone_number: str
     full_name: str
-    birth_date: date
     password: str
     
 

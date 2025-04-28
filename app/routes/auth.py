@@ -9,6 +9,7 @@ from app.schemas import UserCreate, UserLogin
 from app.config import templates
 from app.services.csrf_service import CSRFService
 from app.services.redis_service import RedisService
+from app.services.hash_service import HashService
 
 router = APIRouter()
 
@@ -37,13 +38,12 @@ async def register_post(request: Request, db: AsyncSession = Depends(get_db)):
     form_data = await request.form()
     session_token = request.session.get("csrf_token")
     form_token = form_data.get("csrf_token")
-    CSRFService.validate_csrf_token(session_token, form_token)  # Проверка CSRF-токен
+    CSRFService.validate_csrf_token(session_token, form_token)  
     form = await RegistrationForm.from_formdata(request)
     if await form.validate_on_submit():
         user_data = UserCreate(
             phone_number=form.phone_number.data,
             full_name=form.full_name.data,
-            birth_date=form.birth_date.data,
             password=form.password.data
         )
         
@@ -54,22 +54,24 @@ async def register_post(request: Request, db: AsyncSession = Depends(get_db)):
                 "register.html",
                 {"request": request, "form": form, "csrf_token": request.session.get("csrf_token"), "error": "Номер телефона уже зарегистрирован"}
             )
-            
-        request.session['pending_user'] = {
-            'phone_number': form.phone_number.data,
-            "full_name": form.full_name.data,
-            "birth_date": str(form.birth_date.data),
-            "password": form.password.data
-        }
+        
+        key = f"pending_user: {user_data.phone_number}"
         
         redis_service = RedisService()
         
+        hashed_password = await service.hash_service.hash_password(user_data.password)
+        user_data.password = hashed_password 
+        
         verification_service = PhoneVerificationService()
-
         ver_code = verification_service.generate_verification_code()
-        request.session["verification_code"] = str(ver_code)
-
+        
+        await redis_service.set(key, {
+            "user_data": user_data.model_dump(),
+            "verification_code": str(ver_code)
+        }, ex=300)
+    
         await verification_service.send_sms_code(phone_number=form.phone_number.data, code=ver_code)
+        request.session["pending_phone"] = user_data.phone_number
 
         return RedirectResponse(url='/verify_phone', status_code=301)
 
@@ -78,7 +80,10 @@ async def register_post(request: Request, db: AsyncSession = Depends(get_db)):
 
 @router.get("/verify_phone", response_class=HTMLResponse)
 async def verify_phone_get(request: Request):
-    return templates.TemplateResponse("verify_phone.html", {"request": request})
+    phone_number = request.session.get("pending_phone")
+    if not phone_number:
+        return RedirectResponse(url="/register", status_code=302)
+    return templates.TemplateResponse("verify_phone.html", {"request": request, "phone_number": phone_number})
 
 
 @router.post("/verify_phone", response_class=HTMLResponse)
@@ -86,22 +91,33 @@ async def verify_phone_post(request: Request, db: AsyncSession = Depends(get_db)
     form_data = await request.form()
     code_parts = [form_data.get(f'code{i}', '') for i in range(1, 5)]
     entered_code = ''.join(code_parts)
-    session_code = request.session.get('verification_code')
-    if entered_code == session_code:
-        user_data = UserCreate(**request.session.get('pending_user'))
-        print(user_data)
+    
+    phone_number = request.session.get("pending_phone")
+    if not phone_number:
+        return templates.TemplateResponse(
+            "verify_phone.html",
+            {"request": request, "error": "Сессия истекла, повторите регистрацию"}
+        )
+    
+    redis_service = RedisService()
+    key = f"pending_user: {phone_number}"
+    pending_data = await redis_service.get(key)
+    
+    if pending_data and entered_code == pending_data["verification_code"]:
+        user_data = UserCreate(**pending_data["user_data"])
         service = UserService(db)
         new_user = await service.create_user(user_data)
+        await redis_service.delete(key)  # Очищаем Redis
         request.session["user_id"] = str(new_user.id)
-        del request.session['verification_code']
-        del request.session['pending_user']
+        if "pending_phone" in request.session:
+            del request.session["pending_phone"]
         return templates.TemplateResponse(
             "main.html",
             {"request": request, "current_user": new_user, "success": "Регистрация прошла успешно"}
         )
     return templates.TemplateResponse(
         "verify_phone.html",
-        {"request": request, "error": "Неверный код"}
+        {"request": request, "phone_number": phone_number, "error": "Неверный код или данные устарели"}
     )
     
     
