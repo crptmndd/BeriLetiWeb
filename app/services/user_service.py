@@ -2,8 +2,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import User
 from app.schemas import UserCreate, UserUpdate
-from uuid import UUID
+from uuid import UUID, uuid4
 from app.services.hash_service import HashService 
+from fastapi import HTTPException, UploadFile
+from pathlib import Path
+import aiofiles
+from PIL import Image
+import io
+
+
+ALLOWED_EXT = {".png", ".jpg", ".jpeg"}
+MAX_AVATAR_SIZE = 5 * 1024 * 1024  # 2 MB
+MAX_DIMENSION = (300, 300)         # максимальный размер аватара
+JPEG_QUALITY = 85 
+
 
 
 class UserService:
@@ -49,3 +61,56 @@ class UserService:
         await self.db.commit()
         await self.db.refresh(user)
         return user
+    
+    async def set_avatar(self, user, upload: UploadFile):
+        # 1) Проверка расширения
+        ext = Path(upload.filename).suffix.lower()
+        if ext not in ALLOWED_EXT:
+            raise HTTPException(
+                status_code=400,
+                detail="Неподдерживаемый формат. Разрешены: " + ", ".join(ALLOWED_EXT)
+            )
+
+        # 2) Читаем весь файл в память и проверяем размер
+        content = await upload.read()
+        if len(content) > MAX_AVATAR_SIZE:
+            size_kb = len(content) // 1024
+            raise HTTPException(
+                status_code=413,
+                detail=f"Файл слишком большой ({size_kb} КБ). Макс. {MAX_AVATAR_SIZE//(1024*1024)} МБ."
+            )
+
+        # 3) Удаляем старый аватар
+        upload_dir = Path("app/static/uploads")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        if user.avatar:
+            old = upload_dir / user.avatar
+            if old.exists():
+                old.unlink()
+
+        # 4) Открываем через Pillow, ресайз и сжимаем
+        img = Image.open(io.BytesIO(content))
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        # Используем LANCZOS вместо ANTIALIAS
+        img.thumbnail(MAX_DIMENSION, Image.LANCZOS)
+
+        buf = io.BytesIO()
+        save_kwargs = {}
+        if ext in (".jpg", ".jpeg"):
+            save_kwargs["quality"] = JPEG_QUALITY
+            save_kwargs["optimize"] = True
+        img.save(buf, format=img.format or "PNG", **save_kwargs)
+        data = buf.getvalue()
+
+        # 5) Записываем на диск под новым именем
+        filename = f"{uuid4()}{ext}"
+        path = upload_dir / filename
+        async with aiofiles.open(path, "wb") as f:
+            await f.write(data)
+
+        # 6) Сохраняем в БД
+        user.avatar = filename
+        await self.db.commit()
+        await self.db.refresh(user)
+        return filename

@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Сервис отправки посылок{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+
 </head>
 <body>
     <header>
@@ -19,8 +20,7 @@
                     <li><a href="/register">Регистрация</a></li>
                 {% endif %}
                 {% if current_user %}
-                    <li style="float: right;"><a href="/logout">Выйти</a></li>
-                    <li style="float: right;">Привет, {{ current_user.full_name }}!</li>
+                    <li style="float: right;"><a href="/profile">Профиль</a></li>
                 {% endif %}
             </ul>
         </nav>

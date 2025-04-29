@@ -16,7 +16,7 @@ router = APIRouter()
 # TODO: Add profile page, and then start chat + Redis
 
 
-async def get_current_user(request: Request, db: AsyncSession):
+async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)):
     user_id = request.session.get("user_id")
     if user_id:
         service = UserService(db)

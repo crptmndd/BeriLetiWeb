@@ -5,5 +5,5 @@ __pycache__/
 *.рус
 .vscode
 alembic.ini
-/sessions
+/app/static/uploads
 /app/database/database.db

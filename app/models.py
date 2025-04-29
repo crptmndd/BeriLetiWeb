@@ -18,6 +18,7 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(String, unique=True, index=True)
     email: Mapped[Optional[str]] = mapped_column(String, unique=True, nullable=True)
     full_name: Mapped[str] = mapped_column(String)
+    avatar: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     rating: Mapped[float] = mapped_column(Float, default=0.0)
     password_hash: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
