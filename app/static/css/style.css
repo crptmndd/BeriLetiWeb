@@ -401,3 +401,62 @@ footer ul li a {
     margin-left: 10px;
   }
   
+/* static/css/style.css */
+/* --- стили чата --- */
+.chat-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.chat-start,
+.chat-window {
+  margin-bottom: 1rem;
+}
+
+#messages {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  background: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.message {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  position: relative;
+  max-width: 80%;
+}
+
+.message.mine {
+  background: #d1ffd1;
+  margin-left: auto;
+}
+
+.message.theirs {
+  background: #f1f1f1;
+  margin-right: auto;
+}
+
+.message .time {
+  font-size: 0.75rem;
+  color: #666;
+  position: absolute;
+  bottom: 2px;
+  right: 6px;
+}
+
+#message-input {
+  width: calc(100% - 90px);
+  padding: 0.5rem;
+}
+
+#message-form button {
+  padding: 0.5rem 1rem;
+}

@@ -4,6 +4,7 @@ from app.routes.auth import router as auth_router
 from app.routes.main import router as main_router
 from app.api.v1.user import router as user_api_router
 from app.routes.profile import router as user_web_router
+from app.routes.chat import router as chat_router
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_csrf import CSRFMiddleware
 from app.config import templates, SECRET_KEY
@@ -15,23 +16,14 @@ app = FastAPI()
 # Подключение с использованием пароля
 r = redis.Redis(
     host='localhost',
-    port=6379,
-    password='123'
+    port=6379
 )
 
 class CacheStaticFiles(StaticFiles):
     async def get_response(self, path: str, scope) -> Response:
-        # получаем стандартный ответ (200 или 304)
         response = await super().get_response(path, scope)
-        # ставим кэширование на неделю
         response.headers["Cache-Control"] = "public, max-age=604800"
         return response
-
-# Подключение статических файлов
-# static_files = StaticFiles(
-#     directory="app/static",
-#     headers=[("Cache-Control", "public, max-age=604800")]
-# )
 
 app.mount(
     "/static",
@@ -44,11 +36,11 @@ app.add_middleware(
     secret_key=SECRET_KEY,
     https_only=True,
     same_site="strict"
-    )
-# app.add_middleware(CSRFMiddleware, secret=CSRF_KEY)
+)
 
 # Подключение маршрутов
 app.include_router(auth_router)
 app.include_router(main_router)
 app.include_router(user_web_router)
 app.include_router(user_api_router, prefix="/api")
+app.include_router(chat_router)
