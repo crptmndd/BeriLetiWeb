@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Добавить почту{% endblock %}
+{% block content %}
+  <h1>Привязать e-mail</h1>
+  <form action="" method="post">
+    <label for="email">Введите ваш e-mail:</label><br>
+    <input type="email" name="email" id="email" required><br><br>
+    <button type="submit">Отправить ссылку для подтверждения</button>
+  </form>
+{% endblock %}

@@ -114,3 +114,11 @@ class UserService:
         await self.db.commit()
         await self.db.refresh(user)
         return filename
+    
+    async def set_email(self, user_id: str, email: str):
+        user = await self.db.get(User, user_id)
+        if not user:
+            raise ValueError("Пользователь не найден")
+        user.email = email
+
+        await self.db.commit()

@@ -58,8 +58,14 @@
         <i class="icon">📱</i> {{ current_user.phone_number }}
       </li>
       <li class="profile-item clickable">
-        <a href="#" class="item-link">
-          <span><i class="icon">➕</i> {% if current_user.email %}{{ current_user.email }}{% else %}Добавить почту{% endif %}</span>
+        <a href="{{ url_for('add_email_form') }}" class="item-link">
+          <span><i class="icon">➕</i> 
+            {% if current_user.email %}
+              {{ current_user.email }}
+            {% else %}
+              Добавить почту
+            {% endif %}
+          </span>
           <i class="arrow">›</i>
         </a>
       </li>
