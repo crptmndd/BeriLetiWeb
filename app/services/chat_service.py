@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy import select, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime
+from app.services.user_service import UserService
 
 from app.models import Message
 
@@ -13,26 +14,32 @@ class ChatService:
         
     async def get_conversations(self, user_id: UUID) -> List[Dict]:
         """
-        Собрать уникальный список peer_id, с которыми он уже обменивался сообщениями.
+        Возвращает список уникальных peer_id, с которыми общался user_id,
+        и информацию по каждому собеседнику.
         """
         stmt = select(Message.sender_id, Message.receiver_id).where(
             or_(Message.sender_id == user_id, Message.receiver_id == user_id)
         )
         res = await self.db.execute(stmt)
         pairs = res.all()
+
         peer_ids = set()
         for s, r in pairs:
             if s != user_id: peer_ids.add(s)
             if r != user_id: peer_ids.add(r)
 
-        # Получаем их имена
-        from app.services.user_service import UserService
-        users = []
+        result = []
+        user_svc = UserService(self.db)
         for pid in peer_ids:
-            u = await UserService(self.db).get_user_by_id(pid)
+            u = await user_svc.get_user_by_id(pid)
             if u:
-                users.append({"id": str(pid), "name": u.full_name})
-        return users
+                result.append({
+                    "id": str(u.id),
+                    "full_name": u.full_name,
+                    "avatar": u.avatar,
+                    "rating": u.rating
+                })
+        return result
 
     async def get_history(self, user_id: UUID, peer_id: UUID) -> List[Dict]:
         """

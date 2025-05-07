@@ -1,14 +1,44 @@
 {% extends "base.html" %}
-
-{% block title %}Главная{% endblock %}
+{% block title %}Главная — Сервис отправки посылок{% endblock %}
 
 {% block content %}
-    <h1>Добро пожаловать в сервис отправки посылок!</h1>
-    <p>Здесь вы можете добавить свою поездку или найти попутчика для отправки посылки.</p>
-
-    <!-- Кнопки для навигации -->
-    <div style="text-align: center; margin: 20px;">
-        <a href="/add_trip" class="button">Создать поездку</a>
-        <a href="/search_trip" class="button">Найти поездку</a>
+  <!-- Герой-блок -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Доставим посылку быстрее, чем курьер!</h1>
+      <p>Передай посылку с попутчиком — быстро, надёжно, безопасно</p>
+      <div class="hero-buttons">
+        <a href="/search_trip" class="btn btn-primary">Найти попутчика</a>
+        <a href="/add_trip"    class="btn btn-outline">Разместить поездку</a>
+      </div>
     </div>
+    <div class="hero-image">
+      <!-- Положите ваш иллюстрацию в static/images/hero.png -->
+      <img src="{{ url_for('static', path='images/main.png') }}" alt="Доставка посылок">
+    </div>
+  </section>
+
+  <!-- Фичи -->
+  <section class="features">
+    <div class="feature">
+      <img src="{{ url_for('static', path='images/speed.png') }}" alt="Скорость">
+      <h3>Скорость</h3>
+      <p>Быстрый поиск попутчиков</p>
+    </div>
+    <div class="feature">
+      <img src="{{ url_for('static', path='images/flexibility.png') }}" alt="Гибкость">
+      <h3>Гибкость</h3>
+      <p>Вы можете отправить посылку с удобным попутчиком</p>
+    </div>
+    <div class="feature">
+      <img src="{{ url_for('static', path='images/savings.png') }}" alt="Экономия">
+      <h3>Экономия</h3>
+      <p>Доставка с попутчиком дешевле, чем обычная</p>
+    </div>
+    <div class="feature">
+      <img src="{{ url_for('static', path='images/support.png') }}" alt="Поддержка">
+      <h3>Поддержка</h3>
+      <p>Круглосуточная поддержка 24/7</p>
+    </div>
+  </section>
 {% endblock %}

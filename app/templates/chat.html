@@ -3,69 +3,103 @@
 
 {% block content %}
 <div class="chat-container">
-  <div class="chat-window" id="chat-window">
-    <h2>Чат с {{ initial_peer_name }}</h2>
-    <div id="messages"></div>
-    <form id="message-form">
-      <input type="text" id="message-input" placeholder="Введите сообщение…" autocomplete="off" required>
-      <button type="submit">Отправить</button>
-    </form>
-  </div>
+  <!-- Левая панель -->
+  <aside class="sidebar">
+    <h2>Мои чаты</h2>
+    <ul class="chat-list">
+      {% for c in conversations %}
+      <li class="{% if c.id == initial_peer_id %}active{% endif %}">
+        <a href="{{ url_for('chat_page') }}?peer_id={{ c.id }}">
+          <img src="{% if c.avatar %}{{ url_for('static', path='uploads/'~c.avatar) }}{% else %}{{ url_for('static', path='images/register_image.png') }}{% endif %}"
+               class="avatar-small" alt="Аватар {{ c.full_name }}">
+          <span class="name">{{ c.full_name }}</span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <!-- Правая панель -->
+  <section class="chat-panel">
+    {% if initial_peer_id %}
+      <div class="chat-header">
+        <img src="{% if initial_peer_avatar %}{{ url_for('static', path='uploads/'~initial_peer_avatar) }}{% else %}{{ url_for('static', path='images/register_image.png') }}{% endif %}"
+             class="avatar" alt="">
+        <div class="peer-info">
+          <p class="peer-name">{{ initial_peer_name }}</p>
+          <p class="peer-rating">{{ initial_peer_rating }}★</p>
+        </div>
+        {% if order %}
+        <div class="order-controls">
+          {% if role=='customer' and order.status=='pending' %}
+            <form onsubmit="return confirm('Отменить заказ?');" 
+                  action="{{ url_for('cancel_order') }}" method="post">
+              <input type="hidden" name="order_id" value="{{ order.id }}">
+              <button class="btn-cancel">Отменить</button>
+            </form>
+          {% elif role=='carrier' and order.status=='pending' %}
+            <form action="{{ url_for('confirm_order') }}" method="post">
+              <input type="hidden" name="order_id" value="{{ order.id }}">
+              <button class="btn-confirm">Подтвердить</button>
+            </form>
+          {% elif order.status=='confirmed' %}
+            <form onsubmit="return confirm('Отменить заказ?');" 
+                  action="{{ url_for('cancel_order') }}" method="post">
+              <input type="hidden" name="order_id" value="{{ order.id }}">
+              <button class="btn-cancel">Отменить</button>
+            </form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      <div id="messages" class="message-list"></div>
+      <form id="message-form" class="message-form">
+        <input type="text" id="message-input" placeholder="Напишите сообщение…" required>
+        <button type="submit">Отправить</button>
+      </form>
+    {% else %}
+      <div class="placeholder">
+        <img src="{{ url_for('static', path='images/choose-chat.png') }}" alt="Выберите чат">
+        <p>Выберите чат слева, чтобы начать</p>
+      </div>
+    {% endif %}
+  </section>
 </div>
 
 <script>
-    const SELF_ID = "{{ current_user.id }}";
-    const PEER_ID = "{{ initial_peer_id }}";
-  
-    const msgContainer = document.getElementById('messages');
-    const msgForm      = document.getElementById('message-form');
-    const msgInput     = document.getElementById('message-input');
-    let ws;
-  
-    // Рендер одного сообщения
-    function appendMessage(msg) {
-      const cls = msg.sender_id === SELF_ID ? 'mine' : 'theirs';
-      const div = document.createElement('div');
-      div.classList.add('message', cls);
-      div.innerHTML = `
-        <span class="time">${new Date(msg.created_at).toLocaleTimeString()}</span>
-        <p>${msg.content}</p>`;
-      msgContainer.appendChild(div);
-      msgContainer.scrollTop = msgContainer.scrollHeight;
-    }
-  
-    async function initChat() {
-      // 1) Загружаем историю по правильному пути
-      const resp = await fetch(`/chat/history?peer_id=${PEER_ID}`);
-      if (resp.ok) {
-        const history = await resp.json();
-        history.forEach(appendMessage);
-      } else {
-        console.error('Не удалось загрузить историю чата');
-      }
-  
-      // 2) Открываем только один WebSocket
-      const proto = (location.protocol === 'https:' ? 'wss://' : 'ws://');
-      ws = new WebSocket(`${proto}${location.host}/ws/chat/${PEER_ID}`);
-      ws.onmessage = e => appendMessage(JSON.parse(e.data));
-      ws.onclose   = () => console.log('WebSocket закрыт');
-      ws.onerror   = e => console.error('Ошибка WebSocket', e);
-    }
-  
-    // инициализация сразу при загрузке страницы
-    initChat();
-  
-    // Отправка сообщения
-    msgForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const text = msgInput.value.trim();
-      if (!text) return;
-      ws.send(JSON.stringify({
-        receiver_id: PEER_ID,
-        content: text
-      }));
-      msgInput.value = '';
-    });
-  </script>
-  
+  const SELF_ID = "{{ current_user.id }}";
+  const PEER_ID = "{{ initial_peer_id }}";
+  const msgList = document.getElementById('messages');
+  const msgForm  = document.getElementById('message-form');
+  const msgInput = document.getElementById('message-input');
+  let ws;
+
+  function appendMessage(m) {
+    const div = document.createElement('div');
+    div.className = 'message ' + (m.sender_id===SELF_ID?'mine':'theirs');
+    div.innerHTML = `<span class="time">${new Date(m.created_at).toLocaleTimeString()}</span>
+                     <p>${m.content}</p>`;
+    msgList.appendChild(div);
+    msgList.scrollTop = msgList.scrollHeight;
+  }
+
+  async function initChat() {
+    if (!PEER_ID) return;
+    let r = await fetch(`/chat/history?peer_id=${PEER_ID}`);
+    (await r.json()).forEach(appendMessage);
+    const proto = location.protocol==='https:'?'wss://':'ws://';
+    ws = new WebSocket(`${proto}${location.host}/ws/chat/${PEER_ID}`);
+    ws.onmessage = e => appendMessage(JSON.parse(e.data));
+  }
+  initChat();
+
+  msgForm && msgForm.addEventListener('submit', e => {
+    e.preventDefault();
+    let t = msgInput.value.trim();
+    if (!t) return;
+    ws.send(JSON.stringify({ receiver_id: PEER_ID, content: t }));
+    msgInput.value = '';
+  });
+</script>
 {% endblock %}

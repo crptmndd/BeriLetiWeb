@@ -17,7 +17,7 @@
         <div class="card-top">
           <div class="user-info">
             <img 
-              src="{% if trip.user_avatar %}{{ url_for('static', path='uploads/' ~ trip.user_avatar) }}{% else %}{{ url_for('static', path='images/default-avatar.png') }}{% endif %}" 
+              src="{% if trip.user_avatar %}{{ url_for('static', path='uploads/' ~ trip.user_avatar) }}{% else %}{{ url_for('static', path='images/register_image.png') }}{% endif %}" 
               alt="Аватар {{ trip.user_full_name }}" 
               class="avatar"
             >
@@ -48,9 +48,9 @@
             <a href="#" class="reviews-link">Отзывы</a>
           </div>
           <div class="extra-actions">
-            <a href="{{ url_for('chat_page') }}?peer_id={{ trip.user_id }}" class="btn-chat">
-                Связаться с попутчиком
-            </a>              
+            <a href="{{ url_for('confirm_booking') }}?trip_id={{ trip.id }}" class="btn-book">
+              Забронировать
+            </a>        
           </div>
         </div>
       </div>

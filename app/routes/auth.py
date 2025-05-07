@@ -9,7 +9,7 @@ from app.schemas import UserCreate, UserLogin
 from app.config import templates
 from app.services.csrf_service import CSRFService
 from app.services.redis_service import RedisService
-from app.services.hash_service import HashService
+# from app.services.hash_service import HashService
 from uuid import UUID
 
 router = APIRouter()

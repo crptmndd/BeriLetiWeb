@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Подтвердите бронирование{% endblock %}
+
+{% block content %}
+<div class="confirm-container">
+  <h1 class="confirm-title">Подтвердите бронирование</h1>
+
+  <!-- Маршрут и дата -->
+  <div class="confirm-route">
+    <span class="route-from">{{ trip.from_location }}</span>
+    <span class="route-arrow">➞</span>
+    <span class="route-to">{{ trip.to_location }}</span>
+  </div>
+  <div class="confirm-date">{{ trip.departure_date.strftime('%d.%m.%Y') }}</div>
+
+  <!-- Тип посылки -->
+  <div class="confirm-package">
+    <span class="icon">📦</span>
+    <span>Маленькая посылка (<strong>до {{ order.weight }} кг</strong>)</span>
+  </div>
+
+  <hr class="confirm-separator">
+
+  <!-- Информация о попутчике и цене -->
+  <div class="confirm-details">
+    <div class="driver-info">
+      <img src="{% if driver.avatar %}{{ url_for('static', path='uploads/'~driver.avatar) }}{% else %}{{ url_for('static', path='images/register_image.png') }}{% endif %}"
+           class="avatar" alt="Аватар {{ driver.full_name }}">
+      <div class="driver-text">
+        <p class="driver-name">{{ driver.full_name }}</p>
+        <p class="driver-rating">{{ "%.1f"|format(driver.rating) }}/5 ★</p>
+      </div>
+    </div>
+    <div class="price-info">
+      <div><span>Стоимость поездки</span><span>{{ trip.price }} ₽</span></div>
+      <div><span>Сервисный сбор</span><span>{{ fee }} ₽</span></div>
+    </div>
+  </div>
+
+  <p class="confirm-note">
+    В случае отмены попутчиком, сервисный сбор будет возвращён.
+  </p>
+
+  <!-- Сообщение -->
+  <h2 class="confirm-message-title">
+    Напишите пользователю, чтобы обо всём договориться
+  </h2>
+  <form action="{{ url_for('book_trip') }}" method="post" class="confirm-form">
+    <input type="hidden" name="trip_id" value="{{ trip.id }}">
+    <textarea name="message" placeholder="Напишите сообщение…" required></textarea>
+    <button type="submit">Подтвердить</button>
+  </form>
+  
+</div>
+{% endblock %}

@@ -56,7 +56,7 @@ class Trip(Base):
     user: Mapped["User"] = relationship(back_populates="trips")
     # A trip has multiple orders
     orders: Mapped[List["Order"]] = relationship(back_populates="trip")
-        
+
 
 class Order(Base):
     __tablename__ = "orders"
@@ -66,7 +66,12 @@ class Order(Base):
     trip_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("trips.id"))
     
     weight: Mapped[float] = mapped_column(Float)
-    description: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(
+        String, 
+        default="pending", 
+        nullable=False, 
+        index=True
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     
     # An order belongs to one user

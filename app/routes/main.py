@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Query, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,12 +6,15 @@ from app.database.db import get_db
 from app.forms import CreateTripForm, TripQueryForm
 from app.schemas import TripCreate
 from app.services.trip_service import TripService
+from app.services.user_service import UserService
+from app.services.chat_service import ChatService
 from app.routes.auth import get_current_user
 from datetime import date
 from app.config import templates
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
-from app.models import Trip, Reviews
+from app.models import Trip, Reviews, Order
+from uuid import UUID
 
 router = APIRouter()
 
@@ -180,3 +183,72 @@ async def search_results(
             "departure_date": date_str
         }
     )
+    
+    
+@router.get("/confirm_booking", response_class=HTMLResponse)
+async def confirm_booking(
+    request: Request,
+    trip_id: UUID = Query(...),
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    if not current_user:
+        raise HTTPException(403, "Требуется авторизация")
+
+    # 1) Подгружаем саму поездку
+    trip = await TripService(db).get_trip_by_id(trip_id)
+    if not trip:
+        raise HTTPException(404, "Поездка не найдена")
+
+    # 2) Водитель
+    driver = await UserService(db).get_user_by_id(trip.user_id)
+
+    # 3) Сервисный сбор, например 5%
+    fee = round(trip.price * 0.05)
+
+    # 4) Передаём в шаблон
+    return templates.TemplateResponse(
+        "confirm_booking.html",
+        {
+            "request": request,
+            "current_user": current_user,
+            "trip": trip,
+            "driver": driver,
+            "order": {"weight": trip.max_weight},  # для шаблона
+            "fee": fee
+        }
+    )
+    
+    
+@router.post("/book_trip", name="book_trip")
+async def book_trip(
+    trip_id: UUID         = Form(...),
+    message: str          = Form(...),
+    db: AsyncSession      = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    if not current_user:
+        return RedirectResponse("/login", status_code=302)
+
+    trip = await TripService(db).get_trip_by_id(trip_id)
+    if not trip:
+        raise HTTPException(404, "Поездка не найдена")
+
+    order = Order(
+        user_id=current_user.id,
+        trip_id=trip.id,
+        weight=trip.max_weight,
+    )
+    db.add(order)
+    await db.commit()
+    await db.refresh(order)
+
+    # сразу шлём первое сообщение
+    chat_svc = ChatService(db)
+    await chat_svc.save_message(
+        sender_id   = current_user.id,
+        receiver_id = trip.user_id,
+        content     = message
+    )
+
+    return RedirectResponse(f"/chat?peer_id={trip.user_id}", status_code=302)
