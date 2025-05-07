@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Результаты поиска{% endblock %}
+
+{% block content %}
+  <section class="search-header">
+    <h1>Найдено {{ count }} поездок</h1>
+    <p class="search-route">
+      Попутчики которые поедут по вашему маршруту:
+      {{ from_location }} ➝ {{ to_location }}, {{ departure_date }}
+    </p>
+  </section>
+  
+
+  <div class="trips-list">
+    {% for trip in trips %}
+      <div class="trip-card" id="trip-{{ trip.id }}">
+        <div class="card-top">
+          <div class="user-info">
+            <img 
+              src="{% if trip.user_avatar %}{{ url_for('static', path='uploads/' ~ trip.user_avatar) }}{% else %}{{ url_for('static', path='images/default-avatar.png') }}{% endif %}" 
+              alt="Аватар {{ trip.user_full_name }}" 
+              class="avatar"
+            >
+            <div>
+              <p class="name">{{ trip.user_full_name }}</p>
+              <p class="rating">{{ "%.1f"|format(trip.user_rating) }} ★</p>
+            </div>
+          </div>
+          <div class="route-info">
+            <span class="loc">{{ trip.from_location }}</span>
+            <span class="arrow">➝</span>
+            <span class="loc">{{ trip.to_location }}</span>
+          </div>
+          <div class="tags">
+            <span class="tag date">{{ trip.departure_date.strftime('%d.%m.%Y') }}</span>
+            <span class="tag weight">до {{ trip.max_weight }} кг</span>
+            {% if trip.user_phone %}<span class="tag verified">Верифицирован</span>{% endif %}
+          </div>
+          <div class="actions-top">
+            <span class="price">₽ {{ trip.price }}</span>
+            <button class="btn-toggle">Подробнее</button>
+          </div>
+        </div>
+        <div class="card-extra">
+          <div class="stats">
+            <p>Поездок: {{ trip.trips_count }}</p>
+            <p>Жалоб: {{ trip.complaints_count }}</p>
+            <a href="#" class="reviews-link">Отзывы</a>
+          </div>
+          <div class="extra-actions">
+            <a href="{{ url_for('chat_page') }}?peer_id={{ trip.user_id }}" class="btn-chat">
+                Связаться с попутчиком
+            </a>              
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    document.querySelectorAll('.btn-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const card = btn.closest('.trip-card');
+        const extra = card.querySelector('.card-extra');
+        const isOpen = extra.classList.toggle('open');
+        btn.textContent = isOpen ? 'Скрыть' : 'Подробнее';
+      });
+    });
+  </script>
+{% endblock %}

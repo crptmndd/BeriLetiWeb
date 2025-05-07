@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status, WebSocket
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.db import get_db
@@ -10,10 +10,10 @@ from app.config import templates
 from app.services.csrf_service import CSRFService
 from app.services.redis_service import RedisService
 from app.services.hash_service import HashService
+from uuid import UUID
 
 router = APIRouter()
 
-# TODO: Add profile page, and then start chat + Redis
 
 
 async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)):
@@ -23,6 +23,18 @@ async def get_current_user(request: Request, db: AsyncSession = Depends(get_db))
         user = await service.get_user_by_id(user_id)
         return user
     return None
+
+async def get_current_user_ws(websocket: WebSocket, db: AsyncSession = Depends(get_db)):
+    session = websocket.session  # SessionMiddleware прокидывает session и сюда
+    user_id = session.get("user_id")
+    if not user_id:
+        await websocket.close(code=1008)
+        return
+    user = await UserService(db).get_user_by_id(UUID(user_id))
+    if not user:
+        await websocket.close(code=1008)
+        return
+    return user
 
 
 @router.get("/register", response_class=HTMLResponse)

@@ -1,20 +1,10 @@
-<!-- templates/chat.html -->
 {% extends "base.html" %}
 {% block title %}Чат{% endblock %}
 
 {% block content %}
 <div class="chat-container">
-  <div class="chat-start">
-    <h2>Начать чат</h2>
-    <form id="start-chat-form">
-      <label for="peer_phone">Номер телефона собеседника:</label>
-      <input type="text" id="peer_phone" name="peer_phone" placeholder="+71234567890" required>
-      <button type="submit">Открыть чат</button>
-    </form>
-  </div>
-
-  <div class="chat-window" style="display: none;">
-    <h2>Чат с <span id="peer-display"></span></h2>
+  <div class="chat-window" id="chat-window">
+    <h2>Чат с {{ initial_peer_name }}</h2>
     <div id="messages"></div>
     <form id="message-form">
       <input type="text" id="message-input" placeholder="Введите сообщение…" autocomplete="off" required>
@@ -24,62 +14,58 @@
 </div>
 
 <script>
-  const SELF_ID = "{{ current_user.id }}";
-  let ws, peerId;
-
-  const startForm = document.getElementById('start-chat-form');
-  const chatWindow = document.querySelector('.chat-window');
-  const peerDisplay = document.getElementById('peer-display');
-  const msgContainer = document.getElementById('messages');
-  const msgForm = document.getElementById('message-form');
-  const msgInput = document.getElementById('message-input');
-
-  function appendMessage(msg) {
-    const cls = msg.sender_id === SELF_ID ? 'mine' : 'theirs';
-    const div = document.createElement('div');
-    div.classList.add('message', cls);
-    div.innerHTML = `
-      <span class="time">${new Date(msg.created_at).toLocaleTimeString()}</span>
-      <p>${msg.content}</p>
-    `;
-    msgContainer.appendChild(div);
-    msgContainer.scrollTop = msgContainer.scrollHeight;
-  }
-
-  startForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const phone = document.getElementById('peer_phone').value.trim();
-    const res = await fetch(`/api/get_user_by_phone?phone=${encodeURIComponent(phone)}`);
-    if (!res.ok) {
-      alert('Пользователь не найден');
-      return;
+    const SELF_ID = "{{ current_user.id }}";
+    const PEER_ID = "{{ initial_peer_id }}";
+  
+    const msgContainer = document.getElementById('messages');
+    const msgForm      = document.getElementById('message-form');
+    const msgInput     = document.getElementById('message-input');
+    let ws;
+  
+    // Рендер одного сообщения
+    function appendMessage(msg) {
+      const cls = msg.sender_id === SELF_ID ? 'mine' : 'theirs';
+      const div = document.createElement('div');
+      div.classList.add('message', cls);
+      div.innerHTML = `
+        <span class="time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+        <p>${msg.content}</p>`;
+      msgContainer.appendChild(div);
+      msgContainer.scrollTop = msgContainer.scrollHeight;
     }
-    const data = await res.json();
-    peerId = data.id;
-    peerDisplay.textContent = phone;
-    startForm.parentElement.style.display = 'none';
-    chatWindow.style.display = 'block';
-
-    // 1) Подгружаем историю
-    const hist = await fetch(`/api/chat/history?peer_id=${peerId}`);
-    const history = await hist.json();
-    history.forEach(appendMessage);
-
-    // 2) Открываем WebSocket
-    ws = new WebSocket(`ws://${location.host}/ws/chat/${peerId}`);
-    ws.onmessage = ev => {
-      const msg = JSON.parse(ev.data);
-      appendMessage(msg);
-    };
-    ws.onclose = () => console.log('Disconnected');
-  });
-
-  msgForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const text = msgInput.value.trim();
-    if (!text) return;
-    ws.send(JSON.stringify({ receiver_id: peerId, content: text }));
-    msgInput.value = '';
-  });
-</script>
+  
+    async function initChat() {
+      // 1) Загружаем историю по правильному пути
+      const resp = await fetch(`/chat/history?peer_id=${PEER_ID}`);
+      if (resp.ok) {
+        const history = await resp.json();
+        history.forEach(appendMessage);
+      } else {
+        console.error('Не удалось загрузить историю чата');
+      }
+  
+      // 2) Открываем только один WebSocket
+      const proto = (location.protocol === 'https:' ? 'wss://' : 'ws://');
+      ws = new WebSocket(`${proto}${location.host}/ws/chat/${PEER_ID}`);
+      ws.onmessage = e => appendMessage(JSON.parse(e.data));
+      ws.onclose   = () => console.log('WebSocket закрыт');
+      ws.onerror   = e => console.error('Ошибка WebSocket', e);
+    }
+  
+    // инициализация сразу при загрузке страницы
+    initChat();
+  
+    // Отправка сообщения
+    msgForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const text = msgInput.value.trim();
+      if (!text) return;
+      ws.send(JSON.stringify({
+        receiver_id: PEER_ID,
+        content: text
+      }));
+      msgInput.value = '';
+    });
+  </script>
+  
 {% endblock %}

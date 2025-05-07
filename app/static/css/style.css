@@ -460,3 +460,152 @@ footer ul li a {
 #message-form button {
   padding: 0.5rem 1rem;
 }
+
+
+/* Поиск — список поездок */
+/* === HEADER === */
+.search-header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.search-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.search-header .search-route {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* === LIST === */
+.trips-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* === CARD === */
+.trip-card {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.trip-card .card-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+.trip-card .user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.trip-card .avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ddd;
+}
+.trip-card .name {
+  margin: 0;
+  font-weight: bold;
+}
+.trip-card .rating {
+  margin: 0;
+  color: #f5a623;
+  font-size: 0.9rem;
+}
+
+/* маршрут */
+.trip-card .route-info {
+  flex: 1;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.trip-card .route-info .arrow {
+  font-size: 1.2rem;
+  color: #888;
+}
+
+/* теги */
+.trip-card .tags {
+  display: flex;
+  gap: 0.5rem;
+}
+.trip-card .tag {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #007bff;
+}
+.trip-card .tag.verified {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+/* верхние действия */
+.trip-card .actions-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.trip-card .price {
+  font-weight: bold;
+  font-size: 1rem;
+}
+.trip-card .btn-toggle {
+  background: none;
+  border: 1px solid #007bff;
+  color: #007bff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* дополнительная область */
+.trip-card .card-extra {
+  display: none;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-top: 1px solid #eee;
+  justify-content: space-between;
+  align-items: center;
+}
+.trip-card .card-extra.open {
+  display: flex;
+}
+.trip-card .card-extra .stats {
+  font-size: 0.9rem;
+  color: #333;
+}
+.trip-card .card-extra .stats p {
+  margin: 0.25rem 0;
+}
+.trip-card .card-extra .reviews-link {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #007bff;
+  text-decoration: none;
+}
+.trip-card .card-extra .reviews-link:hover {
+  text-decoration: underline;
+}
+.trip-card .extra-actions .btn-chat {
+  background: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.trip-card .extra-actions .btn-chat:hover {
+  background: #0056b3;
+}
